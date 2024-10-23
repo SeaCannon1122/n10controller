@@ -12,10 +12,10 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
-add_executable(n10controller src/main.cpp src/platform.cpp)
+add_executable(n10controller src/main.cpp src/controller_node.cpp src/screen_elements.cpp src/platform.cpp src/gui/pixel_char.cpp src/gui/menu.cpp src/gui/argb_image.cpp)
 
 target_link_libraries(n10controller ${X11_LIBRARIES})
 
-ament_target_dependencies(n10controller rclcpp std_msgs)
+ament_target_dependencies(n10controller rclcpp std_msgs geometry_msgs)
 
 ament_package()

@@ -662,20 +662,20 @@ void window_poll_events() {
 				else if (event.xbutton.button == Button5) last_mouse_scroll--;
 			} break;
 
-			case KeyPress: {
-				KeySym keysym;
-				char buf[32];
-				XComposeStatus compose_status;
-				int len = XmbLookupString(window_resources[window_index]->ic, (XKeyPressedEvent*)&event, buf, sizeof(buf) - 1, &keysym, (int*)&compose_status);
+			// case KeyPress: {
+			// 	KeySym keysym;
+			// 	char buf[32];
+			// 	XComposeStatus compose_status;
+			// 	int len = XmbLookupString(window_resources[window_index]->ic, (XKeyPressedEvent*)&event, buf, sizeof(buf) - 1, &keysym, (int*)&compose_status);
 
-				if (len > 0) {
+			// 	if (len > 0) {
 
-					for (int j = 0; j < MAX_CALLBACK_FUNCTIONS; j++) if (window_resources[window_index]->char_callbacks[j] != NULL) window_resources[window_index]->char_callbacks[j](window_index, *((int*)&buf));
+			// 		for (int j = 0; j < MAX_CALLBACK_FUNCTIONS; j++) if (window_resources[window_index]->char_callbacks[j] != NULL) window_resources[window_index]->char_callbacks[j](window_index, *((int*)&buf));
 
 					
-				}
+			// 	}
 
-			} break;
+			// } break;
 
 			}
 
