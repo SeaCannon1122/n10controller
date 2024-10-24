@@ -4,6 +4,7 @@
 #include "platform.h"
 
 #include <stdio.h>
+#include <math.h>
 
 struct n10controller_label {
     int menu_item_type;
@@ -38,6 +39,57 @@ struct n10controller_label title_label = {
       0,
       0, 
       4,
+      {0}
+};
+
+struct n10controller_label lin_x_label = {
+      MENU_ITEM_LABEL,
+      1,
+      vel_offset,
+      200,
+      ALIGNMENT_MIDDLE,
+      ALIGNMENT_MIDDLE,
+      ALIGNMENT_MIDDLE,
+      ALIGNMENT_MIDDLE,
+      9999999,
+      9999999,
+      0,
+      0, 
+      2,
+      {0}
+};
+
+struct n10controller_label lin_y_label = {
+      MENU_ITEM_LABEL,
+      1,
+      vel_offset,
+      240,
+      ALIGNMENT_MIDDLE,
+      ALIGNMENT_MIDDLE,
+      ALIGNMENT_MIDDLE,
+      ALIGNMENT_MIDDLE,
+      9999999,
+      9999999,
+      0,
+      0, 
+      2,
+      {0}
+};
+
+struct n10controller_label ang_z_label = {
+      MENU_ITEM_LABEL,
+      1,
+      vel_offset,
+      280,
+      ALIGNMENT_MIDDLE,
+      ALIGNMENT_MIDDLE,
+      ALIGNMENT_MIDDLE,
+      ALIGNMENT_MIDDLE,
+      9999999,
+      9999999,
+      0,
+      0, 
+      2,
       {0}
 };
 
@@ -140,6 +192,71 @@ struct n10controller_label vel_5_label = {
       {0}
 };
 
+struct menu_line vel_arrow_0 = {
+    -105+vel_offset,
+    -152,
+    -105+vel_offset,
+    -152,
+    2.f,
+    0xff000000,
+    ALIGNMENT_MIDDLE,
+    ALIGNMENT_MIDDLE
+};
+
+struct menu_line vel_arrow_1 = {
+    105+vel_offset,
+    -152,
+    105+vel_offset,
+    -152,
+    2.f,
+    0xff000000,
+    ALIGNMENT_MIDDLE,
+    ALIGNMENT_MIDDLE
+};
+
+struct menu_line vel_arrow_2 = {
+    -105+vel_offset,
+    0,
+    -105+vel_offset,
+    0,
+    2.f,
+    0xff000000,
+    ALIGNMENT_MIDDLE,
+    ALIGNMENT_MIDDLE
+};
+
+struct menu_line vel_arrow_3 = {
+    105+vel_offset,
+    0,
+    105+vel_offset,
+    0,
+    2.f,
+    0xff000000,
+    ALIGNMENT_MIDDLE,
+    ALIGNMENT_MIDDLE
+};
+
+struct menu_line vel_arrow_4 = {
+    -105+vel_offset,
+    152,
+    -105+vel_offset,
+    152,
+    2.f,
+    0xff000000,
+    ALIGNMENT_MIDDLE,
+    ALIGNMENT_MIDDLE
+};
+
+struct menu_line vel_arrow_5 = {
+    105+vel_offset,
+    152,
+    105+vel_offset,
+    152,
+    2.f,
+    0xff000000,
+    ALIGNMENT_MIDDLE,
+    ALIGNMENT_MIDDLE
+};
 
 struct menu_line base_line_1 = {
     -105-20+vel_offset,
@@ -174,7 +291,7 @@ struct menu_line base_line_1 = {
     ALIGNMENT_MIDDLE
 };
 
-  struct menu_line base_line_4 = {
+struct menu_line base_line_4 = {
     -105+vel_offset,
     -152-20,
     -105+vel_offset,
@@ -198,13 +315,16 @@ struct menu_line base_line_1 = {
 
 int old_width = 1;
 int old_height = 1;
-struct controller_node_data old_note_data;
+struct controller_node_feedback_data old_node_data;
 
 struct pixel_font* font;
   
 
 void screen_elements_init() {
     pixel_char_convert_string_in(title_label.text, "N10 Controller Panel", 0xffffffff, 0xff000000, PIXEL_CHAR_SHADOW_MASK);
+    pixel_char_convert_string_in(lin_x_label.text, "linear x:  0.00", 0xffffffff, 0xff000000, PIXEL_CHAR_SHADOW_MASK);
+    pixel_char_convert_string_in(lin_y_label.text, "linear y:  0.00", 0xffffffff, 0xff000000, PIXEL_CHAR_SHADOW_MASK);
+    pixel_char_convert_string_in(ang_z_label.text, "angular z:  0.00", 0xffffffff, 0xff000000, PIXEL_CHAR_SHADOW_MASK);
     pixel_char_convert_string_in(vel_0_label.text, "00.0 m/s", 0xffffffff, 0xff000000, PIXEL_CHAR_SHADOW_MASK);
     pixel_char_convert_string_in(vel_1_label.text, "00.0 m/s", 0xffffffff, 0xff000000, PIXEL_CHAR_SHADOW_MASK);
     pixel_char_convert_string_in(vel_2_label.text, "00.0 m/s", 0xffffffff, 0xff000000, PIXEL_CHAR_SHADOW_MASK);
@@ -219,17 +339,95 @@ void screen_elements_init() {
     if(font == NULL) printf("failed to load font\n");
 }
 
-int draw_screen_elements(struct controller_node_data* node_data, unsigned int* pixels, int width, int height) {
-    int change = 0;
+int draw_screen_elements(struct controller_node_feedback_data* node_data, unsigned int* pixels, int width, int height) {
+    int change_bit = 0;
 
     if(old_width != width || old_height != height) {
       old_width = width;
       old_height = height;
-      change = 1;
-      
+      change_bit = 1;
     }
 
-    if(change) {
+    if(old_node_data.lin_x != node_data->lin_x || old_node_data.lin_y != node_data->lin_y || old_node_data.ang_z != node_data->ang_z) {
+      change_bit = 1;
+
+      old_node_data.lin_x = node_data->lin_x;
+      old_node_data.lin_y = node_data->lin_y;
+      old_node_data.ang_z = node_data->ang_z;
+
+      if(old_node_data.lin_x < 0) lin_x_label.text[10].value = '-';
+      else lin_x_label.text[10].value = ' ';
+      lin_x_label.text[11].value = (int)abs(old_node_data.lin_x) + '0';
+      lin_x_label.text[13].value = (int)abs(old_node_data.lin_x * 10) % 10 + '0';
+      lin_x_label.text[14].value = (int)abs(old_node_data.lin_x * 100) % 10 + '0';
+
+      if(old_node_data.lin_y < 0) lin_y_label.text[10].value = '-';
+      else lin_y_label.text[10].value = ' ';
+      lin_y_label.text[11].value = (int)abs(old_node_data.lin_y) + '0';
+      lin_y_label.text[13].value = (int)abs(old_node_data.lin_y * 10) % 10 + '0';
+      lin_y_label.text[14].value = (int)abs(old_node_data.lin_y * 100) % 10 + '0';
+
+      if(old_node_data.ang_z < 0) ang_z_label.text[11].value = '-';
+      else ang_z_label.text[11].value = ' ';
+      ang_z_label.text[12].value = (int)abs(old_node_data.ang_z) + '0';
+      ang_z_label.text[14].value = (int)abs(old_node_data.ang_z * 10) % 10 + '0';
+      ang_z_label.text[15].value = (int)abs(old_node_data.ang_z * 100) % 10 + '0';
+
+    }
+
+    if(
+      old_node_data.wheel_speed_0 != node_data->wheel_speed_0 || 
+      old_node_data.wheel_speed_1 != node_data->wheel_speed_1 ||
+      old_node_data.wheel_speed_2 != node_data->wheel_speed_2 || 
+      old_node_data.wheel_speed_3 != node_data->wheel_speed_3 || 
+      old_node_data.wheel_speed_4 != node_data->wheel_speed_4 || 
+      old_node_data.wheel_speed_5 != node_data->wheel_speed_5 ||
+
+      old_node_data.wheel_angle_0 != node_data->wheel_angle_0 ||
+      old_node_data.wheel_angle_1 != node_data->wheel_angle_1 ||
+      old_node_data.wheel_angle_2 != node_data->wheel_angle_2 ||
+      old_node_data.wheel_angle_3 != node_data->wheel_angle_3 ||
+      old_node_data.wheel_angle_4 != node_data->wheel_angle_4 ||
+      old_node_data.wheel_angle_5 != node_data->wheel_angle_5
+    ) {
+
+      change_bit = 1;
+
+      old_node_data.wheel_speed_0 = node_data->wheel_speed_0;
+      old_node_data.wheel_speed_1 = node_data->wheel_speed_1;
+      old_node_data.wheel_speed_2 = node_data->wheel_speed_2;
+      old_node_data.wheel_speed_3 = node_data->wheel_speed_3;
+      old_node_data.wheel_speed_4 = node_data->wheel_speed_4;
+      old_node_data.wheel_speed_5 = node_data->wheel_speed_5;
+
+      old_node_data.wheel_angle_0 = node_data->wheel_angle_0;
+      old_node_data.wheel_angle_1 = node_data->wheel_angle_1;
+      old_node_data.wheel_angle_2 = node_data->wheel_angle_2;
+      old_node_data.wheel_angle_3 = node_data->wheel_angle_3;
+      old_node_data.wheel_angle_4 = node_data->wheel_angle_4;
+      old_node_data.wheel_angle_5 = node_data->wheel_angle_5;
+
+      vel_arrow_0.x1 = vel_arrow_0.x0 - node_data->wheel_speed_0 * sin(old_node_data.wheel_angle_0) * 0.5f;      
+      vel_arrow_0.y1 = vel_arrow_0.y0 - node_data->wheel_speed_0 * cos(old_node_data.wheel_angle_0) * 0.5f;
+
+      vel_arrow_1.x1 = vel_arrow_1.x0 - node_data->wheel_speed_1 * sin(old_node_data.wheel_angle_1) * 0.5f;      
+      vel_arrow_1.y1 = vel_arrow_1.y0 - node_data->wheel_speed_1 * cos(old_node_data.wheel_angle_1) * 0.5f;
+
+      vel_arrow_2.x1 = vel_arrow_2.x0 - node_data->wheel_speed_2 * sin(old_node_data.wheel_angle_2) * 0.5f;      
+      vel_arrow_2.y1 = vel_arrow_2.y0 - node_data->wheel_speed_2 * cos(old_node_data.wheel_angle_2) * 0.5f;
+
+      vel_arrow_3.x1 = vel_arrow_3.x0 - node_data->wheel_speed_3 * sin(old_node_data.wheel_angle_3) * 0.5f;      
+      vel_arrow_3.y1 = vel_arrow_3.y0 - node_data->wheel_speed_3 * cos(old_node_data.wheel_angle_3) * 0.5f;
+
+      vel_arrow_4.x1 = vel_arrow_4.x0 - node_data->wheel_speed_4 * sin(old_node_data.wheel_angle_4) * 0.5f;      
+      vel_arrow_4.y1 = vel_arrow_4.y0 - node_data->wheel_speed_4 * cos(old_node_data.wheel_angle_4) * 0.5f;
+
+      vel_arrow_5.x1 = vel_arrow_5.x0 - node_data->wheel_speed_5 * sin(old_node_data.wheel_angle_5) * 0.5f;      
+      vel_arrow_5.y1 = vel_arrow_5.y0 - node_data->wheel_speed_5 * cos(old_node_data.wheel_angle_5) * 0.5f;
+
+    }
+
+    if(change_bit) {
 
         for(int i = 0; i < width * height; i++) pixels[i] = 0xff5f5fdf;
 
@@ -238,6 +436,17 @@ int draw_screen_elements(struct controller_node_data* node_data, unsigned int* p
         menu_scene_draw_line(&base_line_3, pixels, width, height, 1);
         menu_scene_draw_line(&base_line_4, pixels, width, height, 1);
         menu_scene_draw_line(&base_line_5, pixels, width, height, 1);
+
+        menu_scene_draw_arrow(&vel_arrow_0, pixels, width, height, 1);
+        menu_scene_draw_arrow(&vel_arrow_1, pixels, width, height, 1);
+        menu_scene_draw_arrow(&vel_arrow_2, pixels, width, height, 1);
+        menu_scene_draw_arrow(&vel_arrow_3, pixels, width, height, 1);
+        menu_scene_draw_arrow(&vel_arrow_4, pixels, width, height, 1);
+        menu_scene_draw_arrow(&vel_arrow_5, pixels, width, height, 1);
+
+        menu_scene_draw_label((struct menu_label*)&lin_x_label, pixels, width, height, 1, (const void**)&font);
+        menu_scene_draw_label((struct menu_label*)&lin_y_label, pixels, width, height, 1, (const void**)&font);
+        menu_scene_draw_label((struct menu_label*)&ang_z_label, pixels, width, height, 1, (const void**)&font);
 
         menu_scene_draw_label((struct menu_label*)&vel_0_label, pixels, width, height, 1, (const void**)&font);
         menu_scene_draw_label((struct menu_label*)&vel_1_label, pixels, width, height, 1, (const void**)&font);

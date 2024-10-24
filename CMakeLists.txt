@@ -18,4 +18,8 @@ target_link_libraries(n10controller ${X11_LIBRARIES})
 
 ament_target_dependencies(n10controller rclcpp std_msgs geometry_msgs)
 
+install(TARGETS
+  n10controller
+  DESTINATION lib/${PROJECT_NAME})
+
 ament_package()

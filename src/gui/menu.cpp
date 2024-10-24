@@ -103,6 +103,42 @@ void menu_scene_draw_line(struct menu_line* line, unsigned int* screen, int widt
 
 }
 
+void menu_scene_draw_arrow(struct menu_line* line, unsigned int* screen, int width, int height, int scale) {
+
+	float angle;
+
+	if(line->x1 - line->x0 == 0) angle = -1.5707f;
+	else angle = atan((float)(line->y1 - line->y0)/(float)(line->x1 - line->x0));
+
+	struct menu_line arrow_head_1 = {
+	-cos(angle -0.8) * 6 * line->thickness+line->x1,
+	-sin(angle -0.8) * 6 * line->thickness+line->y1,
+	line->x1,
+	line->y1,
+	line->thickness,
+	line->color,
+	line->alignment_x,
+	line->alignment_y,
+	};	
+
+	struct menu_line arrow_head_2 = {
+	-cos(angle + 0.8) * 6 * line->thickness+line->x1,
+	-sin(angle + 0.8) * 6 * line->thickness+line->y1,
+	line->x1,
+	line->y1,
+	line->thickness,
+	line->color,
+	line->alignment_x,
+	line->alignment_y,
+	};	
+
+	menu_scene_draw_line(line, screen, width, height, scale);
+	menu_scene_draw_line(&arrow_head_1, screen, width, height, scale);
+	menu_scene_draw_line(&arrow_head_2, screen, width, height, scale);
+
+
+}
+
 void menu_scene_draw_label(struct menu_label* label, unsigned int* screen, int width, int height, int scale, const void** resource_map) {
 
 	pixel_char_print_string(
