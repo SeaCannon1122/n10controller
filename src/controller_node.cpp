@@ -69,7 +69,10 @@ class N10Controller : public rclcpp::Node
 
     void servo_cmd_arm_callback(const std_msgs::msg::Float32MultiArray::SharedPtr msg) {
 
-
+      node_data.arm_angle_0 = msg->data[0];
+      node_data.arm_angle_1 = msg->data[1];
+      node_data.arm_angle_2 = msg->data[2];
+      node_data.arm_angle_3 = msg->data[3];
     }
 
     void timer_callback() {
@@ -88,7 +91,8 @@ class N10Controller : public rclcpp::Node
       arm_angle_msg.data[0] = node_data.arm_x;
       arm_angle_msg.data[1] = node_data.arm_y;
       arm_angle_msg.data[2] = node_data.ground_angle;
-      arm_angle_msg.data[3] = 0;
+      arm_angle_msg.data[3] = node_data.gripper * M_PI - M_PI / 2;
+
       arm_publisher_->publish(arm_angle_msg);
 
     }
@@ -103,8 +107,6 @@ class N10Controller : public rclcpp::Node
 
 
 int controller_node_main(int argc, const char* const* argv) {
-
-    int frame_count = 0;
 
     rclcpp::init(argc, argv);
     auto node = std::make_shared<N10Controller>();
@@ -129,24 +131,31 @@ int controller_node_main(int argc, const char* const* argv) {
           if(get_key_state('G') == 0b11) node_data.arm_mode = 0;
 
           if(get_key_state('D') & 0b1) {
-            if(node_data.arm_x + 0.001 <= 0.3001) node_data.arm_x += 0.001;
+            if(node_data.arm_x + 0.0005 <= 0.2001) node_data.arm_x += 0.0005;
           }
           else if(get_key_state('A') & 0b1) {
-            if(node_data.arm_x - 0.001 >= -0.0501) node_data.arm_x -= 0.001;
+            if(node_data.arm_x - 0.0005 >= -0.0501) node_data.arm_x -= 0.0005;
           }
 
           if(get_key_state('W') & 0b1) {
-            if(node_data.arm_y + 0.001 <= 0.3001) node_data.arm_y += 0.001;
+            if(node_data.arm_y + 0.0005 <= 0.2001) node_data.arm_y += 0.0005;
           }
           else if(get_key_state('S') & 0b1) {
-            if(node_data.arm_y - 0.001 >= -0.1501) node_data.arm_y -= 0.001;
+            if(node_data.arm_y - 0.0005 >= -0.0501) node_data.arm_y -= 0.0005;
           }
 
-          if(get_key_state('E') & 0b1) {
+          if(get_key_state('Q') & 0b1) {
             if(node_data.ground_angle + 0.01 <= M_PI / 2) node_data.ground_angle += 0.01;
           }
-          else if(get_key_state('Q') & 0b1) {
+          else if(get_key_state('E') & 0b1) {
             if(node_data.ground_angle - 0.01 >= -M_PI / 2) node_data.ground_angle -= 0.01;
+          }
+
+          if(get_key_state('X') & 0b1) {
+            if(node_data.gripper + 0.005 <= 1.001) node_data.gripper += 0.005;
+          }
+          else if(get_key_state('C') & 0b1) {
+            if(node_data.gripper - 0.005 >= -0.001) node_data.gripper -= 0.005;
           }
 
         }
@@ -220,11 +229,7 @@ int controller_node_main(int argc, const char* const* argv) {
         }
 
 
-        if(draw_screen_elements(&node_data, pixels, width, height)) {
-          window_draw(window, pixels, width, height, 1);
-          printf("frame %d\n", frame_count);
-          frame_count++;
-        }
+        if(draw_screen_elements(&node_data, pixels, width, height)) window_draw(window, pixels, width, height, 1);
 
         window_poll_events();
 

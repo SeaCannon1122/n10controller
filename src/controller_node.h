@@ -6,7 +6,7 @@
 struct controller_node_feedback_data {
 
     double lin_factor = 0.2;
-    double ang_factor = 0.5;
+    double ang_factor = 0.2;
 
     double lin_x = 0.;
     double lin_y = 0.;
@@ -29,11 +29,12 @@ struct controller_node_feedback_data {
     double arm_x = 0.04;
     double arm_y = 0.09;
     double ground_angle = -1.5;
-    double gripper = 0.;
+    double gripper = 1.;
 
     double arm_angle_0 = 0.;
     double arm_angle_1 = 0.;
     double arm_angle_2 = 0.;
+    double arm_angle_3 = 0.;
 
     int arm_mode = 0;
 };

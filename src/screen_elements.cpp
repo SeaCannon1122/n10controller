@@ -85,6 +85,39 @@ struct n10controller_label gripper_label = {
       {0}
 };
 
+struct menu_line gripper_line_0 = {
+    -vel_offset,
+    -210,
+    -vel_offset,
+    -180,
+    2.f,
+    0xff000000,
+    ALIGNMENT_MIDDLE,
+    ALIGNMENT_MIDDLE
+};
+
+struct menu_line gripper_line_1 = {
+    -vel_offset,
+    -210,
+    -vel_offset,
+    -180,
+    2.f,
+    0xff000000,
+    ALIGNMENT_MIDDLE,
+    ALIGNMENT_MIDDLE
+};
+
+struct menu_line gripper_line_slider = {
+    -vel_offset-45,
+    -195,
+    -vel_offset+45,
+    -195,
+    2.f,
+    0xff000000,
+    ALIGNMENT_MIDDLE,
+    ALIGNMENT_MIDDLE
+};
+
 struct n10controller_label lin_x_label = {
       MENU_ITEM_LABEL,
       1,
@@ -433,6 +466,38 @@ struct menu_line arm_cursor = {
     ALIGNMENT_MIDDLE
 };
 
+struct menu_line seg_0_line = {
+    arm_offset,
+    150,
+    arm_offset,
+    150,
+    2.f,
+    0xff000000,
+    ALIGNMENT_MIDDLE,
+    ALIGNMENT_MIDDLE
+};
+
+struct menu_line seg_1_line = {
+    arm_offset,
+    150,
+    arm_offset,
+    150,
+    2.f,
+    0xff000000,
+    ALIGNMENT_MIDDLE,
+    ALIGNMENT_MIDDLE
+};
+
+struct menu_line seg_2_line = {
+    arm_offset,
+    150,
+    arm_offset,
+    150,
+    2.f,
+    0xff000000,
+    ALIGNMENT_MIDDLE,
+    ALIGNMENT_MIDDLE
+};
 
 
 
@@ -442,8 +507,6 @@ int old_height = 1;
 struct controller_node_feedback_data old_node_data;
 
 struct pixel_font* font;
-  
-#define n10controller_debug
 
 void screen_elements_init() {
     pixel_char_convert_string_in(title_label.text, "N10 Controller Panel", 0xffffffff, 0xff000000, PIXEL_CHAR_SHADOW_MASK);
@@ -465,11 +528,37 @@ void screen_elements_init() {
     ang_slider.y0 = 150 - old_node_data.ang_factor * 300;
     ang_slider.y1 = 150 - old_node_data.ang_factor * 300;
 
-    arm_cursor.x0 = arm_offset + old_node_data.arm_x * 1000.;
-    arm_cursor.y0 = 150 - old_node_data.arm_y * 1000.;
+    arm_cursor.x0 = arm_offset + old_node_data.arm_x * 1500.;
+    arm_cursor.y0 = 150 - old_node_data.arm_y * 1500.;
 
     arm_cursor.x1 = arm_cursor.x0 + 20. * cos(old_node_data.ground_angle);
-    arm_cursor.y1 = arm_cursor.y0 - 20. * sin(old_node_data.ground_angle);   
+    arm_cursor.y1 = arm_cursor.y0 - 20. * sin(old_node_data.ground_angle);       
+
+    double x_0 = seg_0 * cos(M_PI / 2 + old_node_data.arm_angle_0) * 1500.;
+    double y_0 = seg_0 * sin(M_PI / 2 + old_node_data.arm_angle_0) * 1500.;
+    double x_1 = seg_1 * cos(M_PI / 2 + old_node_data.arm_angle_1 + old_node_data.arm_angle_0) * 1500. + x_0;
+    double y_1 = seg_1 * sin(M_PI / 2 + old_node_data.arm_angle_1 + old_node_data.arm_angle_0) * 1500. + y_0;
+    double x_2 = seg_2 * cos(M_PI / 2 + old_node_data.arm_angle_2 + old_node_data.arm_angle_1 + old_node_data.arm_angle_0) * 1500. + x_1;
+    double y_2 = seg_2 * sin(M_PI / 2 + old_node_data.arm_angle_2 + old_node_data.arm_angle_1 + old_node_data.arm_angle_0) * 1500. + y_1;
+
+    seg_0_line.x1 = x_0 + arm_offset;
+    seg_0_line.y1 = -y_0 + 150;
+
+    seg_1_line.x0 = x_0 + arm_offset;
+    seg_1_line.y0 = -y_0 + 150;
+    seg_1_line.x1 = x_1 + arm_offset;
+    seg_1_line.y1 = -y_1 + 150;
+
+    seg_2_line.x0 = x_1 + arm_offset;
+    seg_2_line.y0 = -y_1 + 150;
+    seg_2_line.x1 = x_2 + arm_offset;
+    seg_2_line.y1 = -y_2 + 150;
+
+    gripper_line_0.x0 = -vel_offset - 40 * (old_node_data.arm_angle_3 / M_PI - .5);
+    gripper_line_0.x1 = -vel_offset - 40 * (old_node_data.arm_angle_3 / M_PI - .5);
+
+    gripper_line_1.x0 = -vel_offset + 40 * (old_node_data.arm_angle_3 / M_PI - .5);
+    gripper_line_1.x1 = -vel_offset + 40 * (old_node_data.arm_angle_3 / M_PI - .5);
 
     font = load_pixel_font("default.pixelfont");
 
@@ -483,16 +572,10 @@ int draw_screen_elements(struct controller_node_feedback_data* node_data, unsign
       old_width = width;
       old_height = height;
       change_bit = 1;
-      #ifdef n10controller_debug 
-      printf("size change\n");
-      #endif
     }
 
     if(old_node_data.lin_x != node_data->lin_x || old_node_data.lin_y != node_data->lin_y || old_node_data.ang_z != node_data->ang_z) {
       change_bit = 1;
-      #ifdef n10controller_debug 
-      printf("send vel change\n");
-      #endif
 
       old_node_data.lin_x = node_data->lin_x;
       old_node_data.lin_y = node_data->lin_y;
@@ -537,28 +620,6 @@ int draw_screen_elements(struct controller_node_feedback_data* node_data, unsign
     
 
       change_bit = 1;
-      #ifdef n10controller_debug 
-      printf("rec vel change\n");
-      
-      printf("\n%.8f %.8f\n", old_node_data.wheel_speed_0, old_node_data.wheel_speed_1);
-      printf("\n%.8f %.8f\n", old_node_data.wheel_speed_2, old_node_data.wheel_speed_3);
-      printf("\n%.8f %.8f\n", old_node_data.wheel_speed_4, old_node_data.wheel_speed_5);
-
-      printf("\n%.8f %.8f\n", node_data->wheel_speed_0, node_data->wheel_speed_1);
-      printf("\n%.8f %.8f\n", node_data->wheel_speed_2, node_data->wheel_speed_3);
-      printf("\n%.8f %.8f\n", node_data->wheel_speed_4, node_data->wheel_speed_5);
-
-      printf("\n%.8f %.8f\n", old_node_data.wheel_angle_0, old_node_data.wheel_angle_1);
-      printf("\n%.8f %.8f\n", old_node_data.wheel_angle_2, old_node_data.wheel_angle_3);
-      printf("\n%.8f %.8f\n", old_node_data.wheel_angle_4, old_node_data.wheel_angle_5);
-
-      printf("\n%.8f %.8f\n", node_data->wheel_angle_0, node_data->wheel_angle_1);
-      printf("\n%.8f %.8f\n", node_data->wheel_angle_2, node_data->wheel_angle_3);
-      printf("\n%.8f %.8f\n", node_data->wheel_angle_4, node_data->wheel_angle_5);
-
-      #endif
-
-
 
       old_node_data.wheel_speed_0 = node_data->wheel_speed_0;
       old_node_data.wheel_speed_1 = node_data->wheel_speed_1;
@@ -648,9 +709,6 @@ int draw_screen_elements(struct controller_node_feedback_data* node_data, unsign
     if(old_node_data.lin_factor != node_data->lin_factor || old_node_data.ang_factor != node_data->ang_factor) {
 
       change_bit = 1;
-      #ifdef n10controller_debug 
-      printf("scalars change\n");
-      #endif
 
       old_node_data.lin_factor = node_data->lin_factor;
       old_node_data.ang_factor = node_data->ang_factor;
@@ -663,29 +721,54 @@ int draw_screen_elements(struct controller_node_feedback_data* node_data, unsign
       ang_slider.y1 = 150 - old_node_data.ang_factor * 300;
     }
 
-    if(old_node_data.arm_x != node_data->arm_x || old_node_data.arm_y != node_data->arm_y || old_node_data.ground_angle != node_data->ground_angle) {
+    if(old_node_data.arm_x != node_data->arm_x || old_node_data.arm_y != node_data->arm_y || old_node_data.ground_angle != node_data->ground_angle || old_node_data.arm_angle_0 != node_data->arm_angle_0 || old_node_data.arm_angle_1 != node_data->arm_angle_1 || old_node_data.arm_angle_2 != node_data->arm_angle_2 || old_node_data.arm_angle_3 != node_data->arm_angle_3) {
         change_bit = 1;
-        #ifdef n10controller_debug 
-        printf("arm cursor change\n");
-        #endif
 
         old_node_data.arm_x = node_data->arm_x;
         old_node_data.arm_y = node_data->arm_y;
         old_node_data.ground_angle = node_data->ground_angle;
-
-        arm_cursor.x0 = arm_offset + old_node_data.arm_x * 1000.;
-        arm_cursor.y0 = 150 - old_node_data.arm_y * 1000.;
+        old_node_data.arm_angle_0 = node_data->arm_angle_0;
+        old_node_data.arm_angle_1 = node_data->arm_angle_1;
+        old_node_data.arm_angle_2 = node_data->arm_angle_2;
+        old_node_data.arm_angle_3 = node_data->arm_angle_3;
+        
+        arm_cursor.x0 = arm_offset + old_node_data.arm_x * 1500.;
+        arm_cursor.y0 = 150 - old_node_data.arm_y * 1500.;
 
         arm_cursor.x1 = arm_cursor.x0 + 20. * cos(old_node_data.ground_angle);
-        arm_cursor.y1 = arm_cursor.y0 - 20. * sin(old_node_data.ground_angle);        
+        arm_cursor.y1 = arm_cursor.y0 - 20. * sin(old_node_data.ground_angle);       
+
+        double x_0 = seg_0 * cos(M_PI / 2 + old_node_data.arm_angle_0) * 1500.;
+        double y_0 = seg_0 * sin(M_PI / 2 + old_node_data.arm_angle_0) * 1500.;
+        double x_1 = seg_1 * cos(M_PI / 2 + old_node_data.arm_angle_1 + old_node_data.arm_angle_0) * 1500. + x_0;
+        double y_1 = seg_1 * sin(M_PI / 2 + old_node_data.arm_angle_1 + old_node_data.arm_angle_0) * 1500. + y_0;
+        double x_2 = seg_2 * cos(M_PI / 2 + old_node_data.arm_angle_2 + old_node_data.arm_angle_1 + old_node_data.arm_angle_0) * 1500. + x_1;
+        double y_2 = seg_2 * sin(M_PI / 2 + old_node_data.arm_angle_2 + old_node_data.arm_angle_1 + old_node_data.arm_angle_0) * 1500. + y_1;
+
+        seg_0_line.x1 = x_0 + arm_offset;
+        seg_0_line.y1 = -y_0 + 150;
+
+        seg_1_line.x0 = x_0 + arm_offset;
+        seg_1_line.y0 = -y_0 + 150;
+        seg_1_line.x1 = x_1 + arm_offset;
+        seg_1_line.y1 = -y_1 + 150;
+
+        seg_2_line.x0 = x_1 + arm_offset;
+        seg_2_line.y0 = -y_1 + 150;
+        seg_2_line.x1 = x_2 + arm_offset;
+        seg_2_line.y1 = -y_2 + 150;
+
+        gripper_line_0.x0 = -vel_offset - 40 * (old_node_data.arm_angle_3 / M_PI + .5);
+        gripper_line_0.x1 = -vel_offset - 40 * (old_node_data.arm_angle_3 / M_PI + .5);
+
+        gripper_line_1.x0 = -vel_offset + 40 * (old_node_data.arm_angle_3 / M_PI + .5);
+        gripper_line_1.x1 = -vel_offset + 40 * (old_node_data.arm_angle_3 / M_PI + .5);
 
     }
 
     if(old_node_data.arm_mode != node_data->arm_mode) {
         change_bit = 1;
-        #ifdef n10controller_debug 
-        printf("mode change\n");
-        #endif
+
 
         old_node_data.arm_mode = node_data->arm_mode;
 
@@ -736,7 +819,14 @@ int draw_screen_elements(struct controller_node_feedback_data* node_data, unsign
         menu_scene_draw_label((struct menu_label*)&vel_4_label, pixels, width, height, 1, (const void**)&font);
         menu_scene_draw_label((struct menu_label*)&vel_5_label, pixels, width, height, 1, (const void**)&font);
 
+
+        menu_scene_draw_line(&seg_0_line, pixels, width, height, 1);
+        menu_scene_draw_line(&seg_1_line, pixels, width, height, 1);
+        menu_scene_draw_line(&seg_2_line, pixels, width, height, 1);
         menu_scene_draw_arrow(&arm_cursor, pixels, width, height, 1);
+        menu_scene_draw_line(&gripper_line_0, pixels, width, height, 1);
+        menu_scene_draw_line(&gripper_line_1, pixels, width, height, 1);
+        menu_scene_draw_line(&gripper_line_slider, pixels, width, height, 1);
 
         menu_scene_draw_label((struct menu_label*)&title_label, pixels, width, height, 1, (const void**)&font);
         menu_scene_draw_label((struct menu_label*)&wheels_label, pixels, width, height, 1, (const void**)&font);
