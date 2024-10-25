@@ -468,8 +468,8 @@ void screen_elements_init() {
     arm_cursor.x0 = arm_offset + old_node_data.arm_x * 1000.;
     arm_cursor.y0 = 150 - old_node_data.arm_y * 1000.;
 
-    arm_cursor.x1 = arm_cursor.x0 + 10. * cos(old_node_data.ground_angle);
-    arm_cursor.y1 = arm_cursor.y0 - 10. * sin(old_node_data.ground_angle);   
+    arm_cursor.x1 = arm_cursor.x0 + 20. * cos(old_node_data.ground_angle);
+    arm_cursor.y1 = arm_cursor.y0 - 20. * sin(old_node_data.ground_angle);   
 
     font = load_pixel_font("default.pixelfont");
 
@@ -676,8 +676,8 @@ int draw_screen_elements(struct controller_node_feedback_data* node_data, unsign
         arm_cursor.x0 = arm_offset + old_node_data.arm_x * 1000.;
         arm_cursor.y0 = 150 - old_node_data.arm_y * 1000.;
 
-        arm_cursor.x1 = arm_cursor.x0 + 10. * cos(old_node_data.ground_angle);
-        arm_cursor.y1 = arm_cursor.y0 - 10. * sin(old_node_data.ground_angle);        
+        arm_cursor.x1 = arm_cursor.x0 + 20. * cos(old_node_data.ground_angle);
+        arm_cursor.y1 = arm_cursor.y0 - 20. * sin(old_node_data.ground_angle);        
 
     }
 
