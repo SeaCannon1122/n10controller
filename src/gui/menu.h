@@ -86,5 +86,3 @@ void menu_scene_draw_line(struct menu_line* line, unsigned int* screen, int widt
 void menu_scene_draw_arrow(struct menu_line* line, unsigned int* screen, int width, int height, int scale);
 
 void menu_scene_draw_label(struct menu_label* label, unsigned int* screen, int width, int height, int scale, const void** resource_map);
-
-void menu_scene_frame(struct menu_scene* menu, unsigned int* screen, int width, int height, int scale, const void** resource_map, int mouse_x, int mouse_y, int mouse_left_click);
