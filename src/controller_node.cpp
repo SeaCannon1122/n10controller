@@ -24,6 +24,7 @@ using namespace std::chrono_literals;
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float32_multi_array.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "std_srvs/srv/set_bool.hpp"
 
 using namespace std::chrono_literals;
 
@@ -34,6 +35,8 @@ class N10Controller : public rclcpp::Node
       vel_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/n10/cmd_vel", 10);
       wheels_motor_subscriber_ = this->create_subscription<std_msgs::msg::Float32MultiArray>("/n10/motor_vel", 10, std::bind(&N10Controller::motor_vel_callback, this, std::placeholders::_1));
       wheels_angle_subscriber_ = this->create_subscription<std_msgs::msg::Float32MultiArray>("/n10/servo_cmd_wheels", 10, std::bind(&N10Controller::servo_cmd_wheels_callback, this, std::placeholders::_1));
+
+      enable_service_ = create_client<std_srvs::srv::SetBool>("/eduard/enable");
 
       timer_ = this->create_wall_timer(
       10ms, std::bind(&N10Controller::timer_callback, this));
@@ -61,7 +64,6 @@ class N10Controller : public rclcpp::Node
 
     }
 
-  private:
     void timer_callback() {
       auto message = geometry_msgs::msg::Twist();
       message.linear.x = node_data.lin_x;
@@ -77,6 +79,7 @@ class N10Controller : public rclcpp::Node
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr vel_publisher_;
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr wheels_motor_subscriber_;
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr wheels_angle_subscriber_;
+    rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr enable_service_;
 };
 
 
@@ -110,7 +113,33 @@ int controller_node_main(int argc, const char* const* argv) {
         if(get_key_state('Q') & 0b1) node_data.ang_z = 1.;
         else if(get_key_state('E') & 0b1) node_data.ang_z = -1.;
         else node_data.ang_z = 0.;
-    
+
+        bool f_state = get_key_state('F') == 0b11;
+        bool r_state = get_key_state('R') == 0b11;
+
+        if(f_state || r_state) {
+
+          auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+
+          if(f_state) request->data = true;
+          else request->data = false;
+          
+          auto future = node->enable_service_->async_send_request(request);
+
+	        bool success = false;
+	        switch (future.wait_for(1s)) {
+	        
+          case std::future_status::ready:
+		        std::cout << future.get()->message << std::endl;
+		        success = future.get()->success;
+		        break;
+	        case std::future_status::deferred: std::cerr << "Request deferred" << std::endl; break;
+	        case std::future_status::timeout: std::cerr << "Request timeout" << std::endl; break;
+	        
+          }
+        }
+
+
     
         int new_width = window_get_width(window);
         int new_height = window_get_height(window);
